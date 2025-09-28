@@ -1,5 +1,4 @@
 import mammoth from 'mammoth';
-import fs from 'fs';
 
 export interface DocumentProcessingResult {
   content: string;
@@ -9,26 +8,25 @@ export interface DocumentProcessingResult {
 
 export class DocumentProcessor {
   static async processDocument(
-    filePath: string, 
+    buffer: Buffer, 
     fileType: string, 
     originalName: string
   ): Promise<DocumentProcessingResult> {
     switch (fileType.toLowerCase()) {
       case 'docx':
-        return this.processDocx(filePath, originalName);
+        return this.processDocx(buffer, originalName);
       case 'pdf':
-        return this.processPdf(filePath, originalName);
+        return this.processPdf(buffer, originalName);
       default:
         throw new Error(`Unsupported file type: ${fileType}`);
     }
   }
 
   private static async processDocx(
-    filePath: string, 
+    buffer: Buffer, 
     originalName: string
   ): Promise<DocumentProcessingResult> {
     try {
-      const buffer = fs.readFileSync(filePath);
       const result = await mammoth.convertToHtml({ buffer });
 
       return {
@@ -43,13 +41,12 @@ export class DocumentProcessor {
   }
 
   private static async processPdf(
-    filePath: string, 
+    buffer: Buffer, 
     originalName: string
   ): Promise<DocumentProcessingResult> {
     try {
       // Dynamic import to avoid module resolution issues
       const pdfParse = (await import('pdf-parse')).default;
-      const buffer = fs.readFileSync(filePath);
       const pdfData = await pdfParse(buffer);
 
       // Convert plain text to HTML with line breaks

@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "concurrently \"npm run next-dev\" \"npm run ws-server\" --names \"NEXT,WS\" --prefix-colors \"blue,green\"",
+    "next-dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start",
+    "start": "concurrently \"npm run start:next\" \"npm run ws-server\" --names \"NEXT,WS\" --prefix-colors \"blue,green\"",
+    "start:next": "next start",
     "lint": "eslint",
     "ws-server": "npx y-websocket-server --port 1234"
   },
@@ -40,6 +42,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.5.10",
+    "concurrently": "^9.0.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",

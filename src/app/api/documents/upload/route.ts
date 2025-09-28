@@ -29,12 +29,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload file
+    // Upload file (process in memory)
     const uploadResult = await FileUploadService.uploadFile(request);
 
-    // Process document content
+    // Process document content from buffer
     const processResult = await DocumentProcessor.processDocument(
-      uploadResult.filePath,
+      uploadResult.buffer,
       uploadResult.fileType,
       uploadResult.originalName
     );
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
       title: processResult.title || uploadResult.originalName,
       originalFileName: uploadResult.originalName,
       fileType: uploadResult.fileType,
-      filePath: uploadResult.filePath,
       content: processResult.content,
       collaborators: [
         {

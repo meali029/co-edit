@@ -1,27 +1,16 @@
-import fs from 'fs';
 import path from 'path';
 import { NextRequest } from 'next/server';
 
 export interface UploadResult {
   filename: string;
   originalName: string;
-  filePath: string;
+  buffer: Buffer;
   fileType: string;
   size: number;
 }
 
 export class FileUploadService {
-  private static uploadsDir = path.join(process.cwd(), 'uploads');
-
-  static ensureUploadsDir() {
-    if (!fs.existsSync(this.uploadsDir)) {
-      fs.mkdirSync(this.uploadsDir, { recursive: true });
-    }
-  }
-
   static async uploadFile(request: NextRequest): Promise<UploadResult> {
-    this.ensureUploadsDir();
-
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -37,43 +26,27 @@ export class FileUploadService {
       throw new Error('Only .docx and .pdf files are allowed');
     }
 
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      throw new Error('File size must be less than 10MB');
+    }
+
     // Generate unique filename
     const timestamp = Date.now();
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const filename = `${timestamp}_${randomSuffix}${fileExtension}`;
-    const filePath = path.join(this.uploadsDir, filename);
 
-    // Convert File to Buffer
+    // Convert File to Buffer for in-memory processing
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
-    // Write file to disk
-    fs.writeFileSync(filePath, buffer);
 
     return {
       filename,
       originalName: file.name,
-      filePath,
+      buffer,
       fileType: fileExtension.substring(1), // Remove the dot
       size: file.size,
     };
-  }
-
-  static getFilePath(filename: string): string {
-    return path.join(this.uploadsDir, filename);
-  }
-
-  static deleteFile(filename: string): boolean {
-    try {
-      const filePath = this.getFilePath(filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      return false;
-    }
   }
 }
