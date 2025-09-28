@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local uploads directory
+uploads/*
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MongoDB data
+data/
+db/
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp/
+temp/
