@@ -34,15 +34,53 @@ export function CollaborativeEditor({
   useEffect(() => {
     if (!documentId) return;
 
+    // Get WebSocket URL from environment or fallback to localhost
+    const getWebSocketUrl = () => {
+      if (typeof window !== 'undefined') {
+        // Client-side: use environment variable or construct from current host
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
+        if (wsUrl) return wsUrl;
+        
+        // Fallback: construct WebSocket URL based on current location
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const host = window.location.hostname;
+        const port = process.env.NEXT_PUBLIC_WS_PORT || '1234';
+        
+        // For localhost, use the specified port
+        if (host === 'localhost' || host === '127.0.0.1') {
+          return `${protocol}//${host}:${port}`;
+        }
+        
+        // For production, try WebSocket on same host with different port
+        // This assumes you have a WebSocket server deployed
+        return `${protocol}//${host}:${port}`;
+      }
+      return 'ws://localhost:1234'; // Server-side fallback
+    };
+
+    const wsUrl = getWebSocketUrl();
+    console.log('Connecting to WebSocket:', wsUrl);
+
     // Create WebSocket provider
     const wsProvider = new WebsocketProvider(
-      `ws://localhost:1234`,
+      wsUrl,
       `document-${documentId}`,
       ydoc
     );
 
     wsProvider.on('status', ({ status }: { status: string }) => {
       setIsConnected(status === 'connected');
+      if (status === 'connected') {
+        console.log('✅ WebSocket connected successfully');
+      } else if (status === 'disconnected') {
+        console.log('❌ WebSocket disconnected');
+      }
+    });
+
+    // Handle connection errors
+    wsProvider.on('connection-error', (error: Error) => {
+      console.error('❌ WebSocket connection error:', error);
+      setIsConnected(false);
     });
 
     setProvider(wsProvider);
@@ -166,13 +204,19 @@ export function CollaborativeEditor({
             
             <div className="ml-auto flex items-center gap-3">
               <div className={`px-3 py-2 text-xs font-medium rounded-full ${
-                isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                isConnected ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
               }`}>
                 <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                  isConnected ? 'bg-green-500' : 'bg-red-500'
+                  isConnected ? 'bg-green-500' : 'bg-yellow-500'
                 }`}></span>
-                {isConnected ? 'Connected' : 'Disconnected'}
+                {isConnected ? 'Live Collaboration' : 'Solo Mode'}
               </div>
+              
+              {!isConnected && (
+                <div className="text-xs text-gray-500 max-w-xs">
+                  Real-time collaboration unavailable. Changes will be saved but not synced with other users.
+                </div>
+              )}
               
               {onSave && (
                 <button
