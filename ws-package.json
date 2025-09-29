@@ -1,0 +1,19 @@
+{
+  "name": "co-edit-websocket-server",
+  "version": "1.0.0",
+  "description": "Standalone WebSocket server for Co-Edit collaborative editing",
+  "main": "standalone-ws-server.js",
+  "scripts": {
+    "start": "node standalone-ws-server.js",
+    "dev": "node standalone-ws-server.js"
+  },
+  "keywords": ["websocket", "collaboration", "yjs", "real-time"],
+  "author": "Co-Edit",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
